@@ -6,15 +6,25 @@ import (
 	"net/http"
 	"os"
 	"io"
+	"flag"
 )
 
 const (
 	lastIssue = 130
 )
 
+var (
+	outdir *string
+)
+
+func init() {
+	outdir = flag.String("out", "Overloads", "Output directory")
+	flag.Parse()
+}
+
 func main() {
 	// let's create the folder containing the issues
-	dirname, err := createOverloadFolder()
+	dirname, err := checkOrCreateOverloadFolder()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -27,18 +37,20 @@ func main() {
 		} else {
 			if errW := writeIssueToDisk(filename, dirname, body); errW != nil {
 				log.Println(errW)
+			} else {
+				log.Printf("Issue '%s' successfully " + 
+					"written to '%s'", filename, dirname)
 			}
 		}
 		counter++
 	}
 }
 
-func createOverloadFolder() (string, error) {
-	dirname := "Overloads"
-	if _, err := os.Stat(dirname); err == nil {
-		return dirname, nil
+func checkOrCreateOverloadFolder() (string, error) {
+	if _, err := os.Stat(*outdir); err == nil {
+		return *outdir, nil
 	}
-	return dirname, os.Mkdir(dirname, 0700)
+	return *outdir, os.Mkdir(*outdir, 0700)
 }
 
 func downloadIssue(filename string, folder string) (io.ReadCloser, error) {
@@ -67,6 +79,6 @@ func writeIssueToDisk(filename string,
 	if errC != nil {
 		return fmt.Errorf("Cannot write '%s' to disk", filename)
 	}
-	io.Copy(out, body)
-	return nil
-}
+	_, errO := io.Copy(out, body)
+	return errO
+}	
