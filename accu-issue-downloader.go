@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	lastIssue = 130
+	lastIssue = 131
 )
 
 var (
